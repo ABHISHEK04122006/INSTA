@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-app-bg text-app-text antialiased;
+  }
+
+  ::selection {
+    @apply bg-pink-100 text-pink-900;
+  }
+
+  button,
+  a,
+  input,
+  textarea {
+    @apply outline-none;
+  }
+}
+
+@layer components {
+  .app-surface {
+    @apply border border-app-border bg-app-card shadow-card;
+  }
+
+  .app-card {
+    @apply rounded-[20px] border border-app-border bg-app-card shadow-card;
+  }
+
+  .field {
+    @apply h-12 w-full rounded-full border border-app-border bg-app-bg px-5 text-sm text-app-text placeholder:text-app-muted transition focus:border-app-primary focus:bg-white focus:ring-4 focus:ring-pink-100;
+  }
+
+  .btn-primary {
+    @apply inline-flex h-[46px] items-center justify-center rounded-[14px] bg-primary-gradient px-5 text-sm font-bold text-white shadow-active transition hover:-translate-y-0.5 hover:shadow-fab disabled:pointer-events-none disabled:translate-y-0 disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply inline-flex h-[46px] items-center justify-center rounded-[14px] border border-app-border bg-white px-5 text-sm font-bold text-app-text transition hover:border-slate-300 hover:bg-app-bg disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-danger-outline {
+    @apply inline-flex h-[46px] items-center justify-center rounded-[14px] border border-red-200 bg-white px-5 text-sm font-bold text-red-500 transition hover:border-red-500 hover:bg-red-500 hover:text-white disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .empty-state {
+    @apply rounded-[24px] border border-app-border bg-white px-6 py-12 text-center text-app-muted shadow-card;
+  }
+
+  .page-title {
+    @apply text-2xl font-black tracking-tight text-app-text;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
