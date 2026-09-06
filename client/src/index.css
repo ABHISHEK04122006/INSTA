@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,14 +7,15 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
   body {
-    @apply bg-app-bg text-app-text antialiased;
+    @apply bg-app-bg text-app-text antialiased transition-colors duration-300 dark:bg-app-dark-bg dark:text-app-dark-text;
   }
 
   ::selection {
-    @apply bg-pink-100 text-pink-900;
+    @apply bg-rose-900/15 text-app-primary dark:text-rose-200;
   }
 
   button,
@@ -25,35 +28,43 @@
 
 @layer components {
   .app-surface {
-    @apply border border-app-border bg-app-card shadow-card;
+    @apply border border-app-border bg-app-card shadow-card transition-colors duration-300 dark:border-app-dark-border dark:bg-app-dark-card dark:shadow-dark-card;
   }
 
   .app-card {
-    @apply rounded-[20px] border border-app-border bg-app-card shadow-card;
+    @apply rounded-[22px] border border-app-border bg-app-card shadow-card transition-colors duration-300 dark:border-app-dark-border dark:bg-app-dark-card dark:shadow-dark-card;
   }
 
   .field {
-    @apply h-12 w-full rounded-full border border-app-border bg-app-bg px-5 text-sm text-app-text placeholder:text-app-muted transition focus:border-app-primary focus:bg-white focus:ring-4 focus:ring-pink-100;
+    @apply h-12 w-full rounded-2xl border border-app-border bg-app-bg px-5 text-sm text-app-text placeholder:text-app-muted transition duration-200 focus:border-app-primary focus:bg-app-card focus:ring-4 focus:ring-rose-900/10 dark:border-app-dark-border dark:bg-slate-900/60 dark:text-app-dark-text dark:placeholder:text-app-dark-muted dark:focus:border-app-primary dark:focus:bg-slate-900;
   }
 
   .btn-primary {
-    @apply inline-flex h-[46px] items-center justify-center rounded-[14px] bg-primary-gradient px-5 text-sm font-bold text-white shadow-active transition hover:-translate-y-0.5 hover:shadow-fab disabled:pointer-events-none disabled:translate-y-0 disabled:opacity-50;
+    @apply inline-flex h-[46px] items-center justify-center gap-2 rounded-[14px] bg-primary-gradient px-5 text-sm font-bold text-white shadow-active transition duration-200 hover:-translate-y-0.5 hover:shadow-fab active:translate-y-0 disabled:pointer-events-none disabled:translate-y-0 disabled:opacity-50;
   }
 
   .btn-secondary {
-    @apply inline-flex h-[46px] items-center justify-center rounded-[14px] border border-app-border bg-white px-5 text-sm font-bold text-app-text transition hover:border-slate-300 hover:bg-app-bg disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex h-[46px] items-center justify-center gap-2 rounded-[14px] border border-app-border bg-app-card px-5 text-sm font-bold text-app-text transition duration-200 hover:border-[#E8AA8D] hover:bg-[#F5E7E5] dark:border-app-dark-border dark:bg-slate-800/80 dark:text-app-dark-text dark:hover:border-slate-700 dark:hover:bg-slate-800 disabled:pointer-events-none disabled:opacity-50;
   }
 
   .btn-danger-outline {
-    @apply inline-flex h-[46px] items-center justify-center rounded-[14px] border border-red-200 bg-white px-5 text-sm font-bold text-red-500 transition hover:border-red-500 hover:bg-red-500 hover:text-white disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex h-[46px] items-center justify-center gap-2 rounded-[14px] border border-[#DC8876] bg-white px-5 text-sm font-bold text-app-primary transition duration-200 hover:border-[#DC8876] hover:bg-[#F5E7E5] hover:text-app-deep dark:border-[#DC8876]/60 dark:bg-slate-900 dark:text-[#FBD0BD] dark:hover:bg-[#7A2638] dark:hover:text-white disabled:pointer-events-none disabled:opacity-50;
   }
 
   .empty-state {
-    @apply rounded-[24px] border border-app-border bg-white px-6 py-12 text-center text-app-muted shadow-card;
+    @apply rounded-[24px] border border-app-border bg-app-card px-6 py-12 text-center text-app-muted shadow-card transition duration-300 dark:border-app-dark-border dark:bg-app-dark-card dark:text-app-dark-muted;
   }
 
   .page-title {
-    @apply text-2xl font-black tracking-tight text-app-text;
+    @apply text-2xl font-black tracking-tight text-app-text dark:text-app-dark-text;
+  }
+
+  .glass-panel {
+    @apply border border-white/20 bg-white/70 backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/70;
+  }
+
+  .glass-card {
+    @apply rounded-[24px] border border-white/40 bg-white/80 shadow-xl backdrop-blur-md dark:border-white/10 dark:bg-slate-900/80 dark:shadow-2xl;
   }
 }
 

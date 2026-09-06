@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { Heart, MessageCircle, Send, Bookmark, Smile, MoreHorizontal, Check, Copy } from 'lucide-react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import UserAvatar from './UserAvatar';
@@ -11,6 +12,11 @@ export default function PostCard({ post: initialPost, onUpdate }) {
   const [showComments, setShowComments] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [liking, setLiking] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [showHeartAnim, setShowHeartAnim] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const lastTapRef = useRef(0);
 
   const isLiked = post.likes?.some((id) => id === user?._id || id._id === user?._id);
   const mediaUrl = post.mediaUrl?.[0];
@@ -33,6 +39,19 @@ export default function PostCard({ post: initialPost, onUpdate }) {
     }
   };
 
+  const handleDoubleTap = () => {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      setShowHeartAnim(true);
+      setTimeout(() => setShowHeartAnim(false), 900);
+      if (!isLiked) {
+        handleLike();
+      }
+    }
+    lastTapRef.current = now;
+  };
+
   const handleComment = async (e) => {
     e.preventDefault();
     if (!comment.trim()) return;
@@ -41,6 +60,7 @@ export default function PostCard({ post: initialPost, onUpdate }) {
       const { data } = await api.post(`/posts/${post._id}/comments`, { text: comment });
       setPost(data.post);
       setComment('');
+      setShowComments(true);
       onUpdate?.(data.post);
     } catch (error) {
       console.error('Comment error:', error);
@@ -49,19 +69,38 @@ export default function PostCard({ post: initialPost, onUpdate }) {
     }
   };
 
+  const handleShare = () => {
+    const postUrl = `${window.location.origin}/post/${post._id}`;
+    navigator.clipboard.writeText(postUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const addEmoji = (emoji) => {
+    setComment((prev) => prev + emoji);
+  };
+
   const formatCaption = (text) => {
     if (!text) return null;
     return text.split(/(\s+)/).map((part, i) => {
       if (part.startsWith('#')) {
         return (
-          <Link key={i} to={`/search?q=${part.slice(1)}`} className="text-blue-900">
+          <Link
+            key={i}
+            to={`/search?q=${part.slice(1)}`}
+            className="font-bold text-app-primary hover:underline"
+          >
             {part}
           </Link>
         );
       }
       if (part.startsWith('@')) {
         return (
-          <Link key={i} to={`/profile/${part.slice(1)}`} className="text-blue-900">
+          <Link
+            key={i}
+            to={`/profile/${part.slice(1)}`}
+            className="font-bold text-app-primary hover:underline"
+          >
             {part}
           </Link>
         );
@@ -84,106 +123,214 @@ export default function PostCard({ post: initialPost, onUpdate }) {
   };
 
   return (
-    <article className="mb-7 overflow-hidden rounded-[24px] bg-white shadow-feed">
-      <div className="flex items-center gap-3 px-[22px] py-[18px]">
-        <UserAvatar user={post.author} />
-        <div className="min-w-0 flex-1">
-          <Link to={`/profile/${post.author?.username}`} className="text-sm font-black text-app-text hover:underline">
-            {post.author?.username}
-          </Link>
-          {post.createdAt && <p className="text-xs text-app-muted">{formatRelativeTime(post.createdAt)}</p>}
+    <article className="mb-6 overflow-hidden rounded-[24px] border border-app-border bg-app-card shadow-feed transition duration-300 hover:shadow-card dark:border-app-dark-border dark:bg-app-dark-card">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4.5">
+        <div className="flex items-center gap-3 min-w-0">
+          <UserAvatar user={post.author} size="md" />
+          <div className="min-w-0">
+            <Link
+              to={`/profile/${post.author?.username}`}
+              className="block truncate text-sm font-black text-app-text hover:underline dark:text-app-dark-text"
+            >
+              {post.author?.fullName || post.author?.username}
+            </Link>
+            <p className="text-[11px] font-medium text-app-muted dark:text-app-dark-muted">
+              @{post.author?.username}{post.createdAt ? ` · ${formatRelativeTime(post.createdAt)}` : ''}
+            </p>
+          </div>
+        </div>
+
+        <div className="relative">
+          <button
+            onClick={() => setShowMenu(!showMenu)}
+            className="rounded-full p-2 text-app-muted transition hover:bg-[#F5E7E5] hover:text-app-primary dark:text-slate-400 dark:hover:bg-slate-800"
+            aria-label="Post options"
+          >
+            <MoreHorizontal className="h-5 w-5" />
+          </button>
+          {showMenu && (
+            <div className="absolute right-0 top-10 z-20 w-44 rounded-2xl border border-app-border bg-white/95 p-1.5 shadow-xl backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95">
+              <button
+                onClick={() => {
+                  handleShare();
+                  setShowMenu(false);
+                }}
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-app-text hover:bg-[#F5E7E5] dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                <Copy className="h-4 w-4" />
+                Copy Link
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="relative aspect-square bg-white px-[18px] pb-[18px]">
+      {/* Media Image / Video Container */}
+      <div
+        onClick={handleDoubleTap}
+        className="relative flex min-h-[260px] cursor-pointer items-center justify-center overflow-hidden bg-app-bg p-2 sm:p-3 dark:bg-black/30"
+      >
         {post.mediaType === 'video' ? (
-          <video src={mediaUrl} controls className="h-full w-full rounded-[18px] object-cover" />
+          <video
+            src={mediaUrl}
+            controls
+            className="max-h-[680px] w-full rounded-[18px] object-contain"
+          />
         ) : (
           <img
             src={mediaUrl}
-            alt={post.caption || `Post by ${post.author?.username || 'user'}`}
-            className="h-full w-full rounded-[18px] object-cover"
+            alt={post.caption || `Post by ${post.author?.username}`}
+            className="max-h-[680px] w-full rounded-[18px] object-contain transition-transform duration-500 hover:scale-[1.01]"
             loading="lazy"
           />
         )}
+
+        {/* Double-tap Animated Heart Overlay */}
+        {showHeartAnim && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/20">
+            <Heart className="h-28 w-28 animate-heart-burst fill-white text-white drop-shadow-2xl" />
+          </div>
+        )}
       </div>
 
-      <div className="px-[22px] pb-5">
-        <div className="flex items-center gap-4 mb-2">
+      {/* Action Bar & Caption */}
+      <div className="px-5 pb-5 pt-3">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <button
+              onClick={handleLike}
+              disabled={liking}
+              className="group inline-flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-xs font-bold text-app-muted transition duration-200 hover:bg-[#F5E7E5] hover:text-app-primary active:scale-95 disabled:opacity-50 dark:hover:bg-white/5"
+              aria-label={isLiked ? 'Unlike post' : 'Like post'}
+            >
+              <Heart
+                className={`h-[18px] w-[18px] stroke-[2.2] transition-colors duration-200 ${
+                  isLiked
+                    ? 'fill-app-primary text-app-primary drop-shadow-md'
+                    : 'text-app-muted group-hover:text-app-primary dark:text-slate-200'
+                }`}
+              />
+              <span className="hidden sm:inline">Like</span>
+            </button>
+            <button
+              onClick={() => setShowComments(!showComments)}
+              className="group inline-flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-xs font-bold text-app-muted transition duration-200 hover:bg-[#F5E7E5] hover:text-app-primary active:scale-95 dark:hover:bg-white/5"
+              aria-label="Toggle comments"
+            >
+              <MessageCircle className="h-[18px] w-[18px] stroke-[2.2] text-app-muted transition group-hover:text-app-primary dark:text-slate-200" />
+              <span className="hidden sm:inline">Comment</span>
+            </button>
+            <button
+              onClick={handleShare}
+              className="group relative inline-flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-xs font-bold text-app-muted transition duration-200 hover:bg-[#F5E7E5] hover:text-app-primary active:scale-95 dark:hover:bg-white/5"
+              aria-label="Share post"
+            >
+              {copied ? (
+                <Check className="h-[18px] w-[18px] text-app-primary stroke-[2.5]" />
+              ) : (
+                <Send className="h-[18px] w-[18px] stroke-[2.2] text-app-muted transition group-hover:text-app-primary dark:text-slate-200" />
+              )}
+              <span className="hidden sm:inline">{copied ? 'Copied' : 'Share'}</span>
+            </button>
+          </div>
+
           <button
-            onClick={handleLike}
-            disabled={liking}
-            className="rounded-full p-1 transition hover:bg-slate-100 disabled:opacity-50"
-            aria-label={isLiked ? 'Unlike post' : 'Like post'}
+            onClick={() => setSaved(!saved)}
+            className="group inline-flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-xs font-bold text-app-muted transition duration-200 hover:bg-[#F5E7E5] hover:text-app-primary active:scale-95 dark:hover:bg-white/5"
+            aria-label="Save post"
           >
-            {isLiked ? (
-              <svg className="w-7 h-7 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-              </svg>
-            ) : (
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-            )}
-          </button>
-          <button
-            onClick={() => setShowComments(!showComments)}
-            className="rounded-full p-1 transition hover:bg-slate-100"
-            aria-label="Toggle comments"
-          >
-            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
+            <Bookmark
+              className={`h-[18px] w-[18px] stroke-[2.2] transition-colors duration-200 ${
+                saved
+                  ? 'fill-app-primary text-app-primary dark:fill-[#FBD0BD] dark:text-[#FBD0BD]'
+                  : 'text-app-muted group-hover:text-app-primary dark:text-slate-200'
+              }`}
+            />
+            <span className="hidden sm:inline">Save</span>
           </button>
         </div>
 
-        <p className="mb-1 text-sm font-black text-app-text">{post.likes?.length || 0} likes</p>
+        {/* Likes Count */}
+        <p className="mb-2 text-xs font-black text-app-text dark:text-app-dark-text">
+          {post.likes?.length || 0} {post.likes?.length === 1 ? 'like' : 'likes'} · {post.comments?.length || 0} {post.comments?.length === 1 ? 'comment' : 'comments'}
+        </p>
 
+        {/* Caption */}
         {post.caption && (
-          <p className="text-sm leading-6 text-app-muted">
-            <Link to={`/profile/${post.author?.username}`} className="mr-1 font-black text-app-text">
+          <p className="text-xs leading-6 text-app-text dark:text-slate-300">
+            <Link
+              to={`/profile/${post.author?.username}`}
+              className="mr-2 font-black text-app-text hover:underline dark:text-app-dark-text"
+            >
               {post.author?.username}
             </Link>
             {formatCaption(post.caption)}
           </p>
         )}
 
+        {/* Comment Count / Toggle */}
         {post.comments?.length > 0 && (
           <button
             onClick={() => setShowComments(!showComments)}
-            className="mt-2 text-sm font-bold text-app-muted"
+            className="mt-2 text-xs font-bold text-app-muted hover:underline dark:text-app-dark-muted"
           >
-            View all {post.comments.length} comments
+            {showComments ? 'Hide comments' : `View all ${post.comments.length} comments`}
           </button>
         )}
 
+        {/* Comments List */}
         {showComments && (
-          <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
+          <div className="mt-3 max-h-48 space-y-2.5 overflow-y-auto pr-1">
             {post.comments?.map((c) => (
-              <p key={c._id} className="text-sm leading-6 text-app-muted">
-                <Link to={`/profile/${c.author?.username}`} className="mr-1 font-black text-app-text">
-                  {c.author?.username}
-                </Link>
-                {c.text}
-              </p>
+              <div key={c._id} className="flex items-start justify-between text-xs leading-5">
+                <p className="text-app-text dark:text-slate-300">
+                  <Link
+                    to={`/profile/${c.author?.username}`}
+                    className="mr-1.5 font-black text-app-text hover:underline dark:text-app-dark-text"
+                  >
+                    {c.author?.username}
+                  </Link>
+                  {c.text}
+                </p>
+              </div>
             ))}
           </div>
         )}
 
-        <form onSubmit={handleComment} className="mt-4 flex items-center gap-2 border-t border-app-border pt-3">
+        {/* Quick Emoji Bar */}
+        <div className="mt-3.5 flex items-center gap-1.5 text-base">
+          {['❤️', '🔥', '👏', '😍', '✨', '🙌'].map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              onClick={() => addEmoji(emoji)}
+              className="rounded-full px-1.5 py-0.5 transition hover:scale-125"
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+
+        {/* Add Comment Form */}
+        <form
+          onSubmit={handleComment}
+          className="mt-3 flex items-center gap-2 border-t border-app-border pt-3 dark:border-app-dark-border"
+        >
+          <Smile className="h-5 w-5 shrink-0 text-slate-400" />
           <input
             type="text"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Add a comment..."
-            className="flex-1 bg-transparent text-sm text-app-text placeholder:text-app-muted"
+            className="flex-1 bg-transparent text-xs text-app-text placeholder:text-app-muted dark:text-app-dark-text dark:placeholder:text-app-dark-muted"
           />
           <button
             type="submit"
             disabled={!comment.trim() || submitting}
-            className="text-sm font-black text-app-primary disabled:opacity-30"
+            className="text-xs font-black text-app-primary transition hover:opacity-80 disabled:opacity-30"
           >
-            Post
+            {submitting ? 'Posting...' : 'Post'}
           </button>
         </form>
       </div>

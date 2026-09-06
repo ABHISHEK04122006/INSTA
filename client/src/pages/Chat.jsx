@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { ArrowLeft, Send, Smile, Phone, Video, MoreVertical } from 'lucide-react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
+import Layout from '../components/Layout';
 import UserAvatar from '../components/UserAvatar';
 
 export default function Chat() {
@@ -107,70 +109,109 @@ export default function Chat() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-insta-pink" />
-      </div>
+      <Layout>
+        <div className="flex h-[70vh] items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-app-primary" />
+        </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-3xl flex-col bg-white shadow-xl shadow-slate-200/60">
-      <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-slate-200 bg-white/90 p-4 backdrop-blur-xl">
-        <Link to="/messages" className="rounded-full p-2 transition hover:bg-slate-100">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </Link>
-        {participant && (
-          <>
-            <UserAvatar user={participant} />
-            <div>
-              <Link to={`/profile/${participant.username}`} className="text-sm font-bold text-slate-950 hover:underline">
-                {participant.username}
-              </Link>
-              <p className="text-xs text-slate-400">Direct message</p>
-            </div>
-          </>
-        )}
-      </div>
+    <Layout>
+      <div className="mx-auto flex h-[calc(100vh-8rem)] max-w-4xl flex-col overflow-hidden rounded-[26px] border border-app-border bg-white shadow-xl transition-colors duration-300 dark:border-app-dark-border dark:bg-app-dark-card">
+        {/* Chat Top Header */}
+        <div className="flex items-center justify-between border-b border-app-border px-5 py-3.5 backdrop-blur-md dark:border-app-dark-border">
+          <div className="flex items-center gap-3.5">
+            <Link
+              to="/messages"
+              className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            {participant && (
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <UserAvatar user={participant} size="md" />
+                  <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-400 dark:border-slate-900" />
+                </div>
+                <div>
+                  <Link
+                    to={`/profile/${participant.username}`}
+                    className="text-sm font-extrabold text-app-text hover:underline dark:text-app-dark-text"
+                  >
+                    {participant.username}
+                  </Link>
+                  <p className="text-[11px] font-medium text-emerald-500">Active now</p>
+                </div>
+              </div>
+            )}
+          </div>
 
-      <div className="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-4">
-        {messages.map((msg) => {
-          const isOwn = msg.sender?._id === user?._id || msg.sender === user?._id;
-          return (
-            <div key={msg._id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
-              <div
-                className={`max-w-[75%] rounded-3xl px-4 py-2 text-sm shadow-sm ${
-                  isOwn ? 'bg-slate-950 text-white' : 'bg-white text-slate-900'
-                }`}
-              >
-                {msg.text}
+          <div className="flex items-center gap-2">
+            <button className="rounded-full p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+              <Phone className="h-4 w-4" />
+            </button>
+            <button className="rounded-full p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+              <Video className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Messages Body */}
+        <div className="flex-1 space-y-3 overflow-y-auto bg-slate-50/50 p-5 dark:bg-slate-900/40">
+          {messages.map((msg) => {
+            const isOwn = msg.sender?._id === user?._id || msg.sender === user?._id;
+            return (
+              <div key={msg._id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                <div
+                  className={`max-w-[75%] rounded-[20px] px-4 py-2.5 text-xs leading-5 shadow-xs ${
+                    isOwn
+                      ? 'rounded-br-sm bg-primary-gradient font-semibold text-white shadow-active'
+                      : 'rounded-bl-sm border border-slate-200/80 bg-white font-medium text-slate-800 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-100'
+                  }`}
+                >
+                  {msg.text}
+                </div>
+              </div>
+            );
+          })}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="rounded-full bg-slate-200 px-3 py-1.5 text-[11px] font-semibold text-slate-500 animate-pulse dark:bg-slate-800 dark:text-slate-400">
+                typing...
               </div>
             </div>
-          );
-        })}
-        {isTyping && (
-          <p className="text-xs font-medium text-slate-400">typing...</p>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
 
-      <form onSubmit={handleSend} className="flex gap-2 border-t border-slate-200 bg-white p-4">
-        <input
-          type="text"
-          value={text}
-          onChange={(e) => { setText(e.target.value); handleTyping(); }}
-          placeholder="Message..."
-          className="field rounded-full"
-        />
-        <button
-          type="submit"
-          disabled={!text.trim()}
-          className="btn-primary rounded-full px-5"
+        {/* Input Bar */}
+        <form
+          onSubmit={handleSend}
+          className="flex items-center gap-2 border-t border-app-border bg-white p-3.5 dark:border-app-dark-border dark:bg-app-dark-card"
         >
-          Send
-        </button>
-      </form>
-    </div>
+          <Smile className="h-5 w-5 shrink-0 text-slate-400" />
+          <input
+            type="text"
+            value={text}
+            onChange={(e) => {
+              setText(e.target.value);
+              handleTyping();
+            }}
+            placeholder="Type a message..."
+            className="field flex-1 text-xs"
+          />
+          <button
+            type="submit"
+            disabled={!text.trim()}
+            className="btn-primary h-11 w-11 rounded-full p-0 shadow-active disabled:opacity-40"
+            aria-label="Send message"
+          >
+            <Send className="h-4 w-4" />
+          </button>
+        </form>
+      </div>
+    </Layout>
   );
 }

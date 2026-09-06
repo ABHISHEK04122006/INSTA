@@ -1,28 +1,48 @@
 import { useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import {
+  Home,
+  Search,
+  Compass,
+  Film,
+  MessageCircle,
+  PlusSquare,
+  Bell,
+  User,
+  Sun,
+  Moon,
+  LogOut,
+  Settings,
+  Sparkles,
+  TrendingUp,
+  X,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
+import { useTheme } from '../context/ThemeContext';
 import UserAvatar from './UserAvatar';
 import FollowButton from './FollowButton';
 import NotificationDropdown from './NotificationDropdown';
 
 const navItems = [
-  { path: '/', label: 'Home', icon: HomeIcon },
-  { path: '/search', label: 'Search', icon: SearchIcon },
-  { path: '/explore', label: 'Explore', icon: ExploreIcon },
-  { path: '/reels', label: 'Reels', icon: ReelsIcon },
-  { path: '/messages', label: 'Messages', icon: MessagesIcon },
-  { path: '/create', label: 'Create', icon: CreateIcon },
+  { path: '/', label: 'Home', icon: Home },
+  { path: '/search', label: 'Search', icon: Search },
+  { path: '/explore', label: 'Explore', icon: Compass },
+  { path: '/reels', label: 'Reels', icon: Film },
+  { path: '/messages', label: 'Messages', icon: MessageCircle },
+  { path: '/create', label: 'Create', icon: PlusSquare },
 ];
 
-export default function Layout({ children }) {
+export default function Layout({ children, wide = false }) {
   const { user, logout } = useAuth();
   const { unreadCount } = useNotifications();
+  const { theme, toggleTheme } = useTheme();
   const [showNotifications, setShowNotifications] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const wideRoutes = ['/explore', '/search', '/settings'];
-  const isWide = wideRoutes.some((path) => location.pathname.startsWith(path)) || location.pathname.startsWith('/profile/');
+
+  const wideRoutes = ['/explore', '/search', '/settings', '/messages'];
+  const isWide = wide || wideRoutes.some((path) => location.pathname.startsWith(path)) || location.pathname.startsWith('/profile/');
 
   const handleLogout = async () => {
     await logout();
@@ -30,47 +50,57 @@ export default function Layout({ children }) {
   };
 
   return (
-    <div className="min-h-screen bg-app-bg">
-      <aside className="fixed hidden h-screen w-[260px] flex-col border-r border-app-border bg-white p-6 shadow-sidebar md:flex">
-        <Link to="/" className="mb-8 flex items-center gap-3 rounded-[20px] px-2 py-2">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-gradient text-lg font-black text-white shadow-active">
-            I
+    <div className="min-h-screen bg-app-bg transition-colors duration-300 dark:bg-app-dark-bg dark:text-app-dark-text">
+      {/* Desktop Sidebar */}
+      <aside className="fixed hidden h-screen w-[280px] flex-col border-r border-app-border bg-[#FCF9F7] px-5 py-6 shadow-sidebar transition-colors duration-300 dark:border-app-dark-border dark:bg-app-dark-card md:flex">
+        {/* Brand Logo */}
+        <Link to="/" className="group mb-8 flex items-center gap-3 rounded-2xl p-1 transition">
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#903945,#E8AA8D)] text-xl font-black text-white shadow-active transition duration-300 group-hover:scale-105">
+            N
           </span>
           <div>
-            <h1 className="text-2xl font-black tracking-tight bg-primary-gradient bg-clip-text text-transparent">
-            Insta
-          </h1>
-            <p className="text-xs font-medium text-app-muted">Social moments, refined</p>
+            <h1 className="text-2xl font-black tracking-tight text-app-primary">
+              Nexora
+            </h1>
+            <p className="text-[11px] font-semibold text-app-muted dark:text-app-dark-muted">
+              Social moments, refined
+            </p>
           </div>
         </Link>
 
-        <nav className="flex flex-col gap-2 flex-1">
+        {/* Primary Nav Navigation */}
+        <nav className="flex flex-1 flex-col gap-2">
           {navItems.map(({ path, label, icon: Icon }) => (
             <NavLink
               key={path}
               to={path}
               className={({ isActive }) =>
-                `flex h-[52px] items-center gap-4 rounded-[14px] pl-[18px] pr-4 text-sm font-bold transition duration-300 ${
+                `flex h-[50px] items-center gap-4 rounded-[14px] px-4 text-sm font-bold transition duration-200 ${
                   isActive
-                    ? 'bg-primary-gradient text-white shadow-active'
-                    : 'text-app-muted hover:bg-slate-100 hover:text-app-text'
+                    ? 'bg-app-primary text-white shadow-active [&>svg]:text-white'
+                    : 'text-[#3A3437] [&>svg]:text-[#5E5157] hover:bg-[#F5E7E5] hover:text-app-deep hover:[&>svg]:text-app-primary dark:text-slate-300 dark:[&>svg]:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-white'
                 }`
               }
             >
-              <Icon className="w-6 h-6" />
+              <Icon className="h-5 w-5 shrink-0 stroke-[2.2]" />
               <span>{label}</span>
             </NavLink>
           ))}
 
+          {/* Notifications Button */}
           <div className="relative">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="flex h-[52px] w-full items-center gap-4 rounded-[14px] pl-[18px] pr-4 text-sm font-bold text-app-muted transition duration-300 hover:bg-slate-100 hover:text-app-text"
+              className={`flex h-[50px] w-full items-center gap-4 rounded-[14px] px-4 text-sm font-bold transition duration-200 ${
+                showNotifications
+                  ? 'bg-[#F5E7E5] text-app-deep [&_svg]:text-app-primary dark:bg-slate-800 dark:text-white'
+                  : 'text-[#3A3437] [&_svg]:text-[#5E5157] hover:bg-[#F5E7E5] hover:text-app-deep hover:[&_svg]:text-app-primary dark:text-slate-300 dark:[&_svg]:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-white'
+              }`}
             >
-              <div className="relative">
-                <BellIcon className="w-6 h-6" />
+              <div className="relative flex items-center justify-center">
+                <Bell className="h-5 w-5 stroke-[2.2]" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white ring-2 ring-white">
+                  <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-app-primary px-1 text-[10px] font-extrabold text-white ring-2 ring-white dark:ring-slate-900">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
@@ -83,139 +113,142 @@ export default function Layout({ children }) {
             />
           </div>
 
+          {/* Profile Navigation */}
           <NavLink
             to={`/profile/${user?.username}`}
             className={({ isActive }) =>
-              `flex h-[52px] items-center gap-4 rounded-[14px] pl-[18px] pr-4 text-sm font-bold transition duration-300 ${
+              `flex h-[50px] items-center gap-3.5 rounded-[14px] px-3.5 text-sm font-bold transition duration-200 ${
                 isActive
-                  ? 'bg-primary-gradient text-white shadow-active'
-                  : 'text-app-muted hover:bg-slate-100 hover:text-app-text'
+                  ? 'bg-app-primary text-white shadow-active'
+                  : 'text-[#3A3437] hover:bg-[#F5E7E5] hover:text-app-deep dark:text-slate-300 dark:hover:bg-slate-800/70 dark:hover:text-white'
               }`
             }
           >
-            <UserAvatar user={user} size="sm" />
+            <UserAvatar user={user} size="sm" disableLink />
             <span>Profile</span>
           </NavLink>
         </nav>
 
-        <div className="rounded-[22px] border border-app-border bg-white p-4 shadow-profile">
-          <div className="mb-3 flex items-center gap-3">
-            <UserAvatar user={user} size="sm" />
-            <div className="min-w-0">
-              <p className="truncate text-sm font-black text-app-text">{user?.username}</p>
-              <p className="truncate text-xs text-app-muted">{user?.fullName || 'Creator'}</p>
-            </div>
-          </div>
-          <button onClick={handleLogout} className="btn-danger-outline w-full">
-            Log out
+        <div className="relative mb-4 hidden overflow-hidden rounded-[22px] bg-app-deep p-5 text-white min-[900px]:block">
+          <div className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-app-primary" />
+          <div className="absolute -bottom-12 left-8 h-24 w-24 rounded-full border-[18px] border-[#7A2638]" />
+          <div className="absolute bottom-5 right-7 h-7 w-7 rounded-full bg-[#E8AA8D]" />
+          <p className="relative text-base font-black leading-5">Good People.<br />Brighter World.</p>
+          <p className="relative mt-3 text-[11px] font-semibold text-[#FBD0BD]">Connect. Create. Belong.</p>
+        </div>
+
+        {/* Sidebar Footer (Theme Toggle + User Profile Card) */}
+        <div className="space-y-3 pt-1">
+          <button
+            onClick={toggleTheme}
+            className="flex h-11 w-full items-center justify-between rounded-xl border border-app-border bg-white px-4 text-xs font-bold text-[#3A3437] transition hover:bg-[#F5E7E5] dark:border-app-dark-border dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-850"
+          >
+            <span className="flex items-center gap-2">
+              {theme === 'dark' ? (
+                <>
+                  <Moon className="h-4 w-4 text-[#E8AA8D]" />
+                  Dark Mode
+                </>
+              ) : (
+                <>
+                  <Sun className="h-4 w-4 text-[#DC8876]" />
+                  Light Mode
+                </>
+              )}
+            </span>
+            <span className="rounded-full bg-[#F5E7E5] px-2 py-0.5 text-[10px] font-extrabold text-app-primary shadow-xs dark:bg-slate-800 dark:text-slate-400">
+              {theme === 'dark' ? 'ON' : 'OFF'}
+            </span>
           </button>
+
+          <div className="rounded-[20px] border border-app-border bg-app-card p-3.5 shadow-sm transition dark:border-app-dark-border dark:bg-slate-900">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <UserAvatar user={user} size="sm" />
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-extrabold text-app-text dark:text-app-dark-text">
+                    {user?.username}
+                  </p>
+                  <p className="truncate text-[11px] font-medium text-app-muted dark:text-app-dark-muted">
+                    {user?.fullName || 'Creator'}
+                  </p>
+                </div>
+              </div>
+              <Link
+                to="/settings"
+                className="rounded-lg p-1 text-app-muted hover:bg-[#F5E7E5] hover:text-app-primary dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                title="Settings"
+              >
+                <Settings className="h-4 w-4" />
+              </Link>
+            </div>
+            <button onClick={handleLogout} className="btn-danger-outline h-9 w-full text-xs">
+              <LogOut className="h-3.5 w-3.5" />
+              Log out
+            </button>
+          </div>
         </div>
       </aside>
 
-      <main className="pb-24 md:ml-[260px] md:pb-0">
-        <div className={`${isWide ? 'max-w-5xl' : 'max-w-[680px]'} mx-auto px-6 py-6`}>
+      {/* Main Content Viewport */}
+      <main className="pb-24 md:ml-[280px] md:pb-8">
+        <div className={`${isWide ? 'max-w-[1240px]' : 'max-w-[700px]'} mx-auto px-4 py-6 sm:px-6`}>
           {children}
         </div>
       </main>
 
+      {/* Floating Create Button for Desktop */}
       <Link
         to="/create"
-        className="fixed bottom-24 right-5 z-40 hidden h-[60px] w-[60px] items-center justify-center rounded-full bg-primary-gradient text-white shadow-fab transition hover:scale-105 md:flex"
+        className="fixed bottom-8 right-8 z-40 hidden h-[58px] w-[58px] items-center justify-center rounded-full bg-app-primary text-white shadow-fab transition duration-300 hover:scale-110 hover:bg-app-deep active:scale-95 md:flex"
         aria-label="Create post"
       >
-        <CreateIcon className="h-7 w-7" />
+        <PlusSquare className="h-6 w-6 stroke-[2.2]" />
       </Link>
 
-      <nav className="fixed bottom-3 left-3 right-3 z-40 flex justify-around rounded-3xl border border-slate-200 bg-white/90 px-2 py-2 shadow-xl shadow-slate-200/80 backdrop-blur-xl md:hidden">
-        {navItems.map(({ path, icon: Icon }) => (
+      {/* Mobile Glass Bottom Navigation Bar */}
+      <nav className="fixed bottom-3 left-3 right-3 z-40 flex items-center justify-around rounded-3xl border border-slate-200/80 bg-white/90 p-2 shadow-2xl backdrop-blur-xl transition dark:border-slate-800/80 dark:bg-slate-900/90 md:hidden">
+        {navItems.map(({ path, label, icon: Icon }) => (
           <NavLink
             key={path}
             to={path}
+            aria-label={label}
             className={({ isActive }) =>
-              `rounded-2xl p-2 transition ${isActive ? 'bg-primary-gradient text-white shadow-active' : 'text-app-muted'}`
+              `rounded-2xl p-2.5 transition duration-200 ${
+                isActive
+                  ? 'bg-app-primary text-white shadow-active'
+                  : 'text-[#5E5157] hover:bg-[#F5E7E5] hover:text-app-primary dark:text-slate-400 dark:hover:bg-slate-800'
+              }`
             }
           >
-            <Icon className="h-5 w-5" />
+            <Icon className="h-5 w-5 stroke-[2.2]" />
           </NavLink>
         ))}
         <NavLink
           to={`/profile/${user?.username}`}
+          aria-label="Profile"
           className={({ isActive }) =>
-            `rounded-2xl p-2 transition ${isActive ? 'bg-primary-gradient text-white shadow-active' : 'text-app-muted'}`
+            `rounded-2xl p-1 transition duration-200 ${
+              isActive ? 'ring-2 ring-app-primary ring-offset-2' : ''
+            }`
           }
         >
-          <UserAvatar user={user} size="sm" />
+          <UserAvatar user={user} size="xs" disableLink />
         </NavLink>
       </nav>
     </div>
   );
 }
 
-function HomeIcon({ className }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-    </svg>
-  );
-}
-
-function SearchIcon({ className }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-    </svg>
-  );
-}
-
-function ExploreIcon({ className }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-    </svg>
-  );
-}
-
-function ReelsIcon({ className }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-    </svg>
-  );
-}
-
-function MessagesIcon({ className }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-    </svg>
-  );
-}
-
-function CreateIcon({ className }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
-    </svg>
-  );
-}
-
-function BellIcon({ className }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-    </svg>
-  );
-}
-
 export function LoadingSkeleton() {
   return (
-    <div className="app-card animate-pulse space-y-4 p-4">
+    <div className="app-card space-y-4 p-5">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-slate-200 rounded-full" />
-        <div className="h-4 bg-slate-200 rounded w-24" />
+        <div className="h-10 w-10 animate-pulse rounded-full bg-slate-200 dark:bg-slate-800" />
+        <div className="h-4 w-28 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
       </div>
-      <div className="aspect-square bg-slate-200 rounded-2xl" />
-      <div className="h-4 bg-slate-200 rounded w-16" />
+      <div className="aspect-square w-full animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" />
+      <div className="h-4 w-20 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
     </div>
   );
 }
@@ -225,14 +258,18 @@ export function PageHeader({ eyebrow, title, description, action }) {
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
         {eyebrow && (
-          <p className="mb-1 text-xs font-bold uppercase tracking-[0.2em] text-insta-pink">
+          <p className="mb-1 text-xs font-extrabold uppercase tracking-[0.2em] text-nexora-pink">
             {eyebrow}
           </p>
         )}
         <h1 className="page-title">{title}</h1>
-        {description && <p className="mt-1 max-w-2xl text-sm text-slate-500">{description}</p>}
+        {description && (
+          <p className="mt-1 max-w-2xl text-sm text-app-muted dark:text-app-dark-muted">
+            {description}
+          </p>
+        )}
       </div>
-      {action}
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   );
 }
@@ -240,12 +277,16 @@ export function PageHeader({ eyebrow, title, description, action }) {
 export function EmptyState({ title, description, action }) {
   return (
     <div className="empty-state">
-      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-app-bg text-2xl">
-        ✦
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-2xl text-app-primary dark:bg-slate-800">
+        <Sparkles className="h-7 w-7 stroke-[1.8]" />
       </div>
-      <p className="text-lg font-bold text-slate-900">{title}</p>
-      {description && <p className="mx-auto mt-2 max-w-sm text-sm">{description}</p>}
-      {action && <div className="mt-5">{action}</div>}
+      <p className="text-lg font-extrabold text-app-text dark:text-app-dark-text">{title}</p>
+      {description && (
+        <p className="mx-auto mt-2 max-w-sm text-sm text-app-muted dark:text-app-dark-muted">
+          {description}
+        </p>
+      )}
+      {action && <div className="mt-6 flex justify-center">{action}</div>}
     </div>
   );
 }
@@ -255,12 +296,12 @@ export function SuggestedUsers({ users, onFollowToggle }) {
 
   if (!users?.length) {
     return (
-      <aside className="hidden lg:block">
+      <aside className="hidden lg:block lg:w-[320px]">
         <div className="app-card sticky top-8 overflow-hidden p-5">
-          <div className="absolute inset-x-0 top-0 h-1 bg-insta-gradient" />
-          <p className="text-sm font-bold text-slate-900">Suggested for you</p>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
-            You are all caught up. New people to follow will appear here.
+          <div className="absolute inset-x-0 top-0 h-1 bg-primary-gradient" />
+          <p className="text-sm font-extrabold text-app-text dark:text-app-dark-text">Suggested for you</p>
+          <p className="mt-2 text-xs leading-5 text-app-muted dark:text-app-dark-muted">
+            You are all caught up! New people to follow will show up here.
           </p>
         </div>
       </aside>
@@ -268,57 +309,68 @@ export function SuggestedUsers({ users, onFollowToggle }) {
   }
 
   return (
-    <aside className="w-full space-y-4 lg:sticky lg:top-8 lg:w-[320px] lg:self-start">
-      <div className="hidden rounded-[20px] bg-white p-5 shadow-card lg:block">
+    <aside className="w-full space-y-5 lg:sticky lg:top-8 lg:w-[320px] lg:self-start">
+      {/* Current User Card */}
+      <div className="hidden rounded-[22px] bg-white p-4 shadow-card transition dark:bg-app-dark-card lg:block">
         <div className="flex items-center gap-3">
           <UserAvatar user={user} size="md" />
-          <div className="min-w-0">
-            <p className="truncate text-sm font-black text-app-text">{user?.username}</p>
-            <p className="truncate text-xs text-app-muted">{user?.fullName || 'Creator'}</p>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-extrabold text-app-text dark:text-app-dark-text">
+              {user?.username}
+            </p>
+            <p className="truncate text-xs text-app-muted dark:text-app-dark-muted">
+              {user?.fullName || 'Creator'}
+            </p>
           </div>
-          <Link to="/settings" className="ml-auto text-xs font-bold text-app-primary">
-            Edit
+          <Link
+            to="/settings"
+            className="text-xs font-bold text-app-primary transition hover:underline"
+          >
+            Switch
           </Link>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-[20px] bg-white shadow-card">
-        <div className="h-1 bg-insta-gradient" />
-        <div className="border-b border-app-border p-5">
+      {/* Suggested Friends */}
+      <div className="overflow-hidden rounded-[22px] bg-white shadow-card transition dark:bg-app-dark-card">
+        <div className="h-1 bg-primary-gradient" />
+        <div className="border-b border-app-border p-4 dark:border-app-dark-border">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-base font-black text-app-text">Suggested Friends</p>
-              <p className="mt-1 text-xs font-medium text-app-muted">Fresh profiles worth following</p>
+              <p className="text-sm font-extrabold text-app-text dark:text-app-dark-text">
+                Suggested for you
+              </p>
+              <p className="text-[11px] font-medium text-app-muted dark:text-app-dark-muted">
+                Fresh profiles worth following
+              </p>
             </div>
-            <Link to="/search" className="rounded-full bg-app-bg px-3 py-1.5 text-xs font-bold text-app-text transition hover:bg-slate-200">
-              Search
+            <Link
+              to="/search"
+              className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+            >
+              See all
             </Link>
           </div>
         </div>
 
-        <div className="divide-y divide-app-border">
+        <div className="divide-y divide-app-border dark:divide-app-dark-border">
           {users.slice(0, 5).map((suggestedUser) => (
-            <div key={suggestedUser._id} className="group flex items-center gap-3 p-4 transition hover:bg-slate-50">
-              <Link to={`/profile/${suggestedUser.username}`} className="shrink-0">
-                <UserAvatar user={suggestedUser} size="lg" />
-              </Link>
-              <Link to={`/profile/${suggestedUser.username}`} className="min-w-0 flex-1">
-                <p className="truncate text-sm font-black text-app-text group-hover:underline">
+            <div
+              key={suggestedUser._id}
+              className="group flex items-center gap-3 p-3.5 transition hover:bg-slate-50 dark:hover:bg-slate-800/40"
+            >
+              <UserAvatar user={suggestedUser} size="md" />
+              <div className="min-w-0 flex-1">
+                <Link
+                  to={`/profile/${suggestedUser.username}`}
+                  className="truncate text-xs font-extrabold text-app-text hover:underline dark:text-app-dark-text"
+                >
                   {suggestedUser.username}
+                </Link>
+                <p className="truncate text-[11px] text-app-muted dark:text-app-dark-muted">
+                  {suggestedUser.fullName || 'User'}
                 </p>
-                <p className="truncate text-xs font-medium text-app-muted">
-                  {suggestedUser.fullName}
-                </p>
-                {suggestedUser.bio ? (
-                  <p className="mt-1 line-clamp-2 text-xs leading-5 text-app-muted">
-                    {suggestedUser.bio}
-                  </p>
-                ) : (
-                  <p className="mt-1 text-xs text-slate-400">
-                    {suggestedUser.followersCount || 0} followers
-                  </p>
-                )}
-              </Link>
+              </div>
               <FollowButton
                 userId={suggestedUser._id}
                 isFollowing={suggestedUser.isFollowing}
@@ -329,34 +381,31 @@ export function SuggestedUsers({ users, onFollowToggle }) {
         </div>
       </div>
 
-      <div className="rounded-[20px] bg-white p-5 shadow-card">
-        <div className="mb-4 flex items-center justify-between">
-          <p className="text-base font-black text-app-text">Trending</p>
-          <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-app-secondary">Live</span>
+      {/* Trending Topics */}
+      <div className="rounded-[22px] bg-white p-5 shadow-card transition dark:bg-app-dark-card">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="flex items-center gap-1.5 text-sm font-extrabold text-app-text dark:text-app-dark-text">
+            <TrendingUp className="h-4 w-4 text-app-primary" />
+            Trending Topics
+          </p>
+          <span className="rounded-full bg-pink-100 px-2.5 py-0.5 text-[10px] font-extrabold text-pink-600 dark:bg-pink-900/40 dark:text-pink-300">
+            Live
+          </span>
         </div>
-        <div className="space-y-3">
-          {['#creatorlife', '#dailyshots', '#reels', '#weekend'].map((tag, index) => (
-            <Link key={tag} to={`/search?q=${tag.slice(1)}`} className="flex items-center justify-between rounded-2xl bg-app-bg px-4 py-3 transition hover:bg-indigo-50">
-              <span className="text-sm font-bold text-app-text">{tag}</span>
-              <span className="text-xs font-semibold text-app-muted">{index + 2}.{index + 4}k</span>
+        <div className="space-y-2">
+          {['#creatorlife', '#dailyshots', '#reels', '#aesthetic'].map((tag, index) => (
+            <Link
+              key={tag}
+              to={`/search?q=${tag.slice(1)}`}
+              className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-xs transition hover:bg-pink-50 dark:bg-slate-900 dark:hover:bg-slate-800"
+            >
+              <span className="font-bold text-slate-800 dark:text-slate-200">{tag}</span>
+              <span className="text-[11px] font-semibold text-slate-400">
+                {index + 2}.{index + 5}k
+              </span>
             </Link>
           ))}
         </div>
-      </div>
-
-      <div className="rounded-[20px] bg-white p-5 shadow-card">
-        <p className="mb-4 text-base font-black text-app-text">Online Friends</p>
-        <div className="flex -space-x-2">
-          {users.slice(0, 5).map((onlineUser) => (
-            <Link key={onlineUser._id} to={`/profile/${onlineUser.username}`} className="relative rounded-full ring-4 ring-white">
-              <UserAvatar user={onlineUser} size="sm" />
-              <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400" />
-            </Link>
-          ))}
-        </div>
-        <p className="mt-4 text-xs leading-5 text-app-muted">
-          Follow people to personalize your feed and unlock more stories.
-        </p>
       </div>
     </aside>
   );

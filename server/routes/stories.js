@@ -34,7 +34,15 @@ router.get('/feed', protect, async (req, res) => {
       grouped[authorId].stories.push(story);
     }
 
-    res.json({ storyGroups: Object.values(grouped) });
+    const storyGroups = Object.values(grouped).sort((a, b) => {
+      const aIsCurrentUser = a.author._id.toString() === req.user._id.toString();
+      const bIsCurrentUser = b.author._id.toString() === req.user._id.toString();
+
+      if (aIsCurrentUser !== bIsCurrentUser) return aIsCurrentUser ? -1 : 1;
+      return new Date(b.stories[0].createdAt) - new Date(a.stories[0].createdAt);
+    });
+
+    res.json({ storyGroups });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -70,14 +78,12 @@ router.post('/', protect, upload.single('media'), async (req, res) => {
 
 router.post('/:id/view', protect, async (req, res) => {
   try {
-    const story = await Story.findById(req.params.id);
-    if (!story) return res.status(404).json({ message: 'Story not found' });
-
-    const viewed = story.viewers.some((v) => v.toString() === req.user._id.toString());
-    if (!viewed) {
-      story.viewers.push(req.user._id);
-      await story.save();
-    }
+    const story = await Story.findOneAndUpdate(
+      { _id: req.params.id, expiresAt: { $gt: new Date() } },
+      { $addToSet: { viewers: req.user._id } },
+      { new: true }
+    );
+    if (!story) return res.status(404).json({ message: 'Story is unavailable or has expired' });
 
     res.json({ message: 'Viewed' });
   } catch (error) {

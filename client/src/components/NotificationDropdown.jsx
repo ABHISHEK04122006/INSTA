@@ -1,28 +1,80 @@
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  Bell,
+  CheckCheck,
+  Heart,
+  MessageSquare,
+  UserPlus,
+  MessageCircle,
+  AtSign,
+  X,
+} from 'lucide-react';
 import { useNotifications } from '../context/NotificationContext';
 import UserAvatar from './UserAvatar';
 
-export default function NotificationDropdown({ isOpen, onClose }) {
+export default function NotificationDropdown({ isOpen, onClose, placement = 'sidebar' }) {
   const { notifications, markAllRead, markRead } = useNotifications();
+  const dropdownRef = useRef(null);
+
+  // Close when clicking outside
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'like':
+        return <Heart className="h-3.5 w-3.5 fill-app-primary text-app-primary" />;
+      case 'comment':
+        return <MessageSquare className="h-3.5 w-3.5 text-[#A65363]" />;
+      case 'follow':
+        return <UserPlus className="h-3.5 w-3.5 text-app-primary" />;
+      case 'dm':
+        return <MessageCircle className="h-3.5 w-3.5 text-[#DC8876]" />;
+      case 'mention':
+        return <AtSign className="h-3.5 w-3.5 text-[#E8AA8D]" />;
+      default:
+        return <Bell className="h-3.5 w-3.5 text-app-primary" />;
+    }
+  };
+
   const getMessage = (n) => {
     switch (n.type) {
-      case 'follow': return 'started following you';
-      case 'like': return 'liked your post';
-      case 'comment': return 'commented on your post';
-      case 'mention': return 'mentioned you';
-      case 'dm': return 'sent you a message';
-      default: return 'interacted with you';
+      case 'follow':
+        return 'started following you';
+      case 'like':
+        return 'liked your post';
+      case 'comment':
+        return 'commented on your post';
+      case 'mention':
+        return 'mentioned you in a post';
+      case 'dm':
+        return 'sent you a message';
+      default:
+        return 'interacted with you';
     }
   };
 
   const getLink = (n) => {
     switch (n.type) {
-      case 'follow': return `/profile/${n.actor?.username}`;
-      case 'dm': return `/messages/${n.targetId}`;
-      default: return `/profile/${n.actor?.username}`;
+      case 'follow':
+        return `/profile/${n.actor?.username}`;
+      case 'dm':
+        return `/messages/${n.targetId}`;
+      default:
+        return `/profile/${n.actor?.username}`;
     }
   };
 
@@ -58,45 +110,97 @@ export default function NotificationDropdown({ isOpen, onClose }) {
 
   const sections = ['Today', 'Yesterday', 'Earlier'];
 
+  const placementClasses = placement === 'header'
+    ? 'fixed left-4 right-4 top-20 md:absolute md:left-auto md:right-0 md:top-12 md:w-[380px]'
+    : 'fixed left-4 right-4 top-20 md:absolute md:left-[230px] md:right-auto md:-top-16 md:w-[380px]';
+
   return (
-    <div className="fixed left-4 right-4 top-20 z-50 flex max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-[22px] border border-app-border bg-white shadow-dropdown sm:left-auto sm:right-6 sm:w-[380px] md:left-[280px] md:right-auto md:top-6">
-      <div className="shrink-0 flex items-center justify-between border-b border-app-border p-5">
+    <div
+      ref={dropdownRef}
+      className={`${placementClasses} z-50 flex max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-[26px] border border-app-border bg-white shadow-2xl transition duration-200 dark:border-slate-800 dark:bg-slate-900 md:shadow-2xl animate-fade-in`}
+    >
+      {/* Header */}
+      <div className="flex shrink-0 items-center justify-between border-b border-app-border p-4 dark:border-slate-800">
         <div>
-          <h3 className="text-base font-black text-app-text">Notifications</h3>
-          <p className="mt-1 text-xs font-medium text-app-muted">Recent activity from your network</p>
+          <h3 className="text-base font-black text-app-text dark:text-white">Notifications</h3>
+          <p className="text-[11px] font-semibold text-app-muted dark:text-slate-400">
+            Recent activity from your network
+          </p>
         </div>
-        <button onClick={markAllRead} className="text-xs font-bold text-app-secondary">Mark all read</button>
+
+        <div className="flex items-center gap-2">
+          {notifications.length > 0 && (
+            <button
+              onClick={markAllRead}
+              className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-app-primary transition hover:bg-[#F5E7E5] dark:hover:bg-slate-800"
+              title="Mark all as read"
+            >
+              <CheckCheck className="h-3.5 w-3.5" />
+              Mark read
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="rounded-full p-1 text-app-muted hover:bg-[#F5E7E5] hover:text-app-primary dark:hover:bg-slate-800"
+            aria-label="Close notifications"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
+      {/* Body List */}
       {notifications.length === 0 ? (
-        <p className="p-6 text-center text-sm text-app-muted">No notifications yet</p>
+        <div className="flex flex-col items-center justify-center p-10 text-center">
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800">
+            <Bell className="h-6 w-6 stroke-[1.8]" />
+          </div>
+          <p className="text-sm font-extrabold text-slate-800 dark:text-slate-200">No notifications yet</p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            When people follow you or like your posts, you'll see them here.
+          </p>
+        </div>
       ) : (
         <div className="min-h-0 flex-1 overflow-y-auto py-2">
-          {sections.map((section) => grouped[section]?.length ? (
-            <div key={section} className="py-2">
-              <p className="px-5 pb-2 text-xs font-black uppercase tracking-[0.18em] text-app-muted">
-                {section}
-              </p>
-              {grouped[section].map((n) => (
-                <Link
-                  key={n._id}
-                  to={getLink(n)}
-                  onClick={() => { markRead(n._id); onClose(); }}
-                  className={`mx-3 flex items-center gap-3 rounded-2xl p-3 transition hover:bg-indigo-50 ${
-                    !n.read ? 'border-l-4 border-app-secondary bg-app-bg' : ''
-                  }`}
-                >
-                  <UserAvatar user={n.actor} size="sm" />
-                  <div className="min-w-0 flex-1 text-sm leading-5">
-                    <span className="font-black text-app-text">{n.actor?.username}</span>{' '}
-                    <span className="text-app-muted">{getMessage(n)}</span>
-                    <p className="text-xs font-medium text-app-muted">{getTimeLabel(n.createdAt)} ago</p>
-                  </div>
-                  {!n.read && <div className="h-2.5 w-2.5 shrink-0 rounded-full bg-app-secondary" />}
-                </Link>
-              ))}
-            </div>
-          ) : null)}
+          {sections.map((section) =>
+            grouped[section]?.length ? (
+              <div key={section} className="py-1">
+                <p className="px-5 pb-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+                  {section}
+                </p>
+                {grouped[section].map((n) => (
+                  <Link
+                    key={n._id}
+                    to={getLink(n)}
+                    onClick={() => {
+                      markRead(n._id);
+                      onClose();
+                    }}
+                    className={`mx-2 flex items-center gap-3 rounded-2xl p-3 transition duration-150 ${
+                      !n.read
+                        ? 'bg-[#FBEDEE] font-semibold dark:bg-white/5'
+                        : 'hover:bg-[#F5E7E5] dark:hover:bg-slate-800/70'
+                    }`}
+                  >
+                    <div className="relative shrink-0">
+                      <UserAvatar user={n.actor} size="sm" disableLink />
+                      <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white shadow-xs dark:bg-slate-900">
+                        {getNotificationIcon(n.type)}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1 text-xs leading-4">
+                      <span className="font-extrabold text-slate-900 dark:text-white">
+                        {n.actor?.username}
+                      </span>{' '}
+                      <span className="text-app-muted dark:text-slate-300">{getMessage(n)}</span>
+                      <p className="mt-1 text-[10px] font-medium text-slate-400">{getTimeLabel(n.createdAt)} ago</p>
+                    </div>
+                    {!n.read && <div className="h-2 w-2 shrink-0 rounded-full bg-app-primary" />}
+                  </Link>
+                ))}
+              </div>
+            ) : null
+          )}
         </div>
       )}
     </div>

@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Image as ImageIcon, Film, UploadCloud, X, Sparkles } from 'lucide-react';
 import api from '../api';
 import Layout, { PageHeader } from '../components/Layout';
 
 export default function CreatePost() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [files, setFiles] = useState([]);
   const [previews, setPreviews] = useState([]);
-  const [caption, setCaption] = useState('');
+  const [caption, setCaption] = useState(() => location.state?.caption || '');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const maxFileSize = 50 * 1024 * 1024;
@@ -79,17 +81,18 @@ export default function CreatePost() {
       <PageHeader
         eyebrow="Publish"
         title="Create new post"
-        description="Upload photos or videos, add a caption, and share it with your followers."
+        description="Upload photos or videos, add a caption, and share with your followers."
       />
-      <div className="app-card p-6">
-
+      <div className="app-card p-6 sm:p-8">
         {error && (
-          <div className="mb-4 rounded-xl bg-red-50 p-3 text-sm font-medium text-red-600">{error}</div>
+          <div className="mb-4 rounded-2xl bg-red-50 p-4 text-xs font-semibold text-red-600 dark:bg-red-950/30 dark:text-red-400">
+            {error}
+          </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {!previews.length ? (
-            <label className="block cursor-pointer rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 p-12 text-center transition hover:border-insta-pink hover:bg-white">
+            <label className="group flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50/50 p-12 text-center transition duration-300 hover:border-app-primary hover:bg-pink-50/20 dark:border-slate-700 dark:bg-slate-900/50">
               <input
                 type="file"
                 accept="image/*,video/*"
@@ -97,30 +100,43 @@ export default function CreatePost() {
                 onChange={handleFiles}
                 className="hidden"
               />
-              <svg className="mx-auto mb-3 h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <p className="font-semibold text-slate-700">Drag photos and videos here</p>
-              <p className="mt-2 text-sm font-bold text-insta-pink">Select from computer</p>
-              <p className="mt-2 text-xs text-slate-400">Up to 10 files, 50 MB each</p>
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-app-primary shadow-md transition duration-300 group-hover:scale-110 dark:bg-slate-800">
+                <UploadCloud className="h-8 w-8" />
+              </div>
+              <p className="text-sm font-extrabold text-slate-800 dark:text-slate-200">
+                Drag photos and videos here
+              </p>
+              <p className="mt-1.5 text-xs font-extrabold text-app-primary">
+                Select from computer
+              </p>
+              <p className="mt-2 text-[11px] text-slate-400">
+                Up to 10 files, 50 MB each
+              </p>
             </label>
           ) : (
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {previews.map((src, i) => (
-                  <div key={src} className="relative aspect-square overflow-hidden rounded-2xl bg-slate-100">
+                  <div
+                    key={src}
+                    className="relative aspect-square overflow-hidden rounded-2xl bg-slate-900 shadow-sm"
+                  >
                     {files[i]?.type.startsWith('video/') ? (
                       <video src={src} controls className="h-full w-full object-cover" />
                     ) : (
-                      <img src={src} alt={`Selected media ${i + 1}`} className="h-full w-full object-cover" />
+                      <img
+                        src={src}
+                        alt={`Selected media ${i + 1}`}
+                        className="h-full w-full object-cover"
+                      />
                     )}
-                    <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2 py-1 text-xs font-bold text-white">
+                    <span className="absolute left-2.5 top-2.5 rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-extrabold text-white backdrop-blur-xs">
                       {files[i]?.type.startsWith('video/') ? 'Video' : 'Image'}
                     </span>
                   </div>
                 ))}
               </div>
-              <p className="text-sm font-medium text-slate-500">
+              <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
                 {files.length} {files.length === 1 ? 'file' : 'files'} selected
               </p>
             </div>
@@ -131,10 +147,10 @@ export default function CreatePost() {
             onChange={(e) => setCaption(e.target.value)}
             placeholder="Write a caption..."
             rows={3}
-            className="field resize-none"
+            className="field h-auto py-3 resize-none text-xs"
           />
 
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             {previews.length > 0 && (
               <button
                 type="button"
@@ -149,7 +165,7 @@ export default function CreatePost() {
               disabled={uploading || !files.length}
               className="btn-primary flex-1"
             >
-              {uploading ? 'Sharing...' : 'Share'}
+              {uploading ? 'Sharing...' : 'Share Post'}
             </button>
           </div>
         </form>

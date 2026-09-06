@@ -21,6 +21,23 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    resetPasswordOtpHash: {
+      type: String,
+      select: false,
+    },
+    resetPasswordOtpExpiresAt: {
+      type: Date,
+      select: false,
+    },
+    resetPasswordOtpAttempts: {
+      type: Number,
+      default: 0,
+      select: false,
+    },
+    resetPasswordLastSentAt: {
+      type: Date,
+      select: false,
+    },
     fullName: {
       type: String,
       required: true,

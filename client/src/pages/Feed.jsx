@@ -3,10 +3,16 @@ import api from '../api';
 import Layout, { EmptyState, LoadingSkeleton } from '../components/Layout';
 import PostCard from '../components/PostCard';
 import StoryBar, { StoryViewer } from '../components/StoryBar';
+import { useAuth } from '../context/AuthContext';
+import { HomeHeader, HomeSidebar, NexoraEmptyFeed, PostComposer } from '../components/HomeDashboard';
+
+const getViewerId = (viewer) => viewer?._id || viewer;
 
 export default function Feed() {
+  const { user } = useAuth();
   const [posts, setPosts] = useState([]);
   const [storyGroups, setStoryGroups] = useState([]);
+  const [suggestedUsers, setSuggestedUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -40,9 +46,18 @@ export default function Feed() {
     }
   }, []);
 
+  const fetchSuggested = useCallback(async () => {
+    try {
+      const { data } = await api.get('/search/users?q=a');
+      setSuggestedUsers(data.users || []);
+    } catch (error) {
+      console.error('Suggested users error:', error);
+    }
+  }, []);
+
   useEffect(() => {
-    Promise.all([fetchFeed(), fetchStories()]).finally(() => setLoading(false));
-  }, [fetchFeed, fetchStories]);
+    Promise.all([fetchFeed(), fetchStories(), fetchSuggested()]).finally(() => setLoading(false));
+  }, [fetchFeed, fetchStories, fetchSuggested]);
 
   useEffect(() => {
     if (!hasMore || loading) return;
@@ -62,13 +77,34 @@ export default function Feed() {
     if (page > 1) fetchFeed(page);
   }, [page, fetchFeed]);
 
-  const handleViewStory = async (group) => {
+  const markStoryAsViewed = useCallback((story) => {
+    if (!user?._id) return;
+    const storyId = typeof story === 'string' ? story : story?._id;
+    if (!storyId) return;
+
+    setStoryGroups((groups) => groups.map((group) => {
+      if (!group.stories.some((item) => item._id === storyId)) return group;
+
+      const stories = group.stories.map((story) => {
+        if (story._id !== storyId) return story;
+
+        const hasViewed = story.viewers?.some((viewer) => String(getViewerId(viewer)) === String(user._id));
+        return hasViewed ? story : { ...story, viewers: [...(story.viewers || []), user._id] };
+      });
+      const hasUnviewed = stories.some((story) => !story.viewers?.some(
+        (viewer) => String(getViewerId(viewer)) === String(user._id)
+      ));
+
+      return { ...group, stories, hasUnviewed };
+    }));
+
+    api.post(`/stories/${storyId}/view`).catch(() => fetchStories());
+  }, [fetchStories, user?._id]);
+
+  const handleViewStory = (group) => {
     const idx = storyGroups.findIndex((g) => g.author._id === group.author._id);
     setStoryIndex(idx);
     setViewingStory(group);
-    for (const story of group.stories) {
-      await api.post(`/stories/${story._id}/view`).catch(() => {});
-    }
   };
 
   const handleStoryNext = () => {
@@ -91,34 +127,36 @@ export default function Feed() {
 
   if (loading) {
     return (
-      <Layout>
-        <LoadingSkeleton />
+      <Layout wide>
+        <div className="space-y-6">
+          <LoadingSkeleton />
+          <LoadingSkeleton />
+        </div>
       </Layout>
     );
   }
 
   return (
-    <Layout>
-      <StoryBar
-        storyGroups={storyGroups}
-        onViewStory={handleViewStory}
-      />
+    <Layout wide>
+      <HomeHeader />
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
+        <main className="min-w-0">
+          <StoryBar storyGroups={storyGroups} onViewStory={handleViewStory} onCreated={fetchStories} />
+          <PostComposer />
 
-      {error ? (
-        <EmptyState
-          title="Feed unavailable"
-          description={error}
-        />
-      ) : posts.length === 0 ? (
-        <EmptyState
-          title="Welcome to Insta"
-          description="Search for people to follow or share your first post to bring this feed to life."
-        />
-      ) : (
-        posts.map((post) => <PostCard key={post._id} post={post} />)
-      )}
+          {error ? (
+            <EmptyState title="Feed unavailable" description={error} />
+          ) : posts.length === 0 ? (
+            <NexoraEmptyFeed />
+          ) : (
+            posts.map((post) => <PostCard key={post._id} post={post} />)
+          )}
 
-      {hasMore && <div ref={observerRef} className="h-10" />}
+          {hasMore && <div ref={observerRef} className="h-10" />}
+        </main>
+
+        <HomeSidebar users={suggestedUsers} />
+      </div>
 
       {viewingStory && (
         <StoryViewer
@@ -126,6 +164,7 @@ export default function Feed() {
           onClose={() => setViewingStory(null)}
           onNext={handleStoryNext}
           onPrev={handleStoryPrev}
+          onStoryView={markStoryAsViewed}
         />
       )}
     </Layout>
