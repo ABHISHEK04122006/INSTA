@@ -112,12 +112,12 @@ export default function NotificationDropdown({ isOpen, onClose, placement = 'sid
 
   const placementClasses = placement === 'header'
     ? 'fixed left-4 right-4 top-20 md:absolute md:left-auto md:right-0 md:top-12 md:w-[380px]'
-    : 'fixed left-4 right-4 top-20 md:absolute md:left-[230px] md:right-auto md:-top-16 md:w-[380px]';
+    : 'fixed left-4 right-4 top-20 md:left-[300px] md:right-auto md:top-6 md:w-[min(380px,calc(100vw-320px))]';
 
   return (
     <div
       ref={dropdownRef}
-      className={`${placementClasses} z-50 flex max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-[26px] border border-app-border bg-white shadow-2xl transition duration-200 dark:border-slate-800 dark:bg-slate-900 md:shadow-2xl animate-fade-in`}
+      className={`${placementClasses} z-50 flex max-h-[calc(100vh-6rem)] flex-col overflow-hidden rounded-[26px] border border-app-border bg-white shadow-2xl transition duration-200 dark:border-slate-800 dark:bg-slate-900 md:max-h-[calc(100vh-3rem)] md:shadow-2xl animate-fade-in`}
     >
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between border-b border-app-border p-4 dark:border-slate-800">

@@ -52,9 +52,9 @@ export default function Layout({ children, wide = false }) {
   return (
     <div className="min-h-screen bg-app-bg transition-colors duration-300 dark:bg-app-dark-bg dark:text-app-dark-text">
       {/* Desktop Sidebar */}
-      <aside className="fixed hidden h-screen w-[280px] flex-col border-r border-app-border bg-[#FCF9F7] px-5 py-6 shadow-sidebar transition-colors duration-300 dark:border-app-dark-border dark:bg-app-dark-card md:flex">
+      <aside className="fixed hidden h-screen min-h-screen w-[280px] flex-col overflow-y-auto scrollbar-hide border-r border-app-border bg-[#FCF9F7] px-5 py-6 shadow-sidebar transition-colors duration-300 dark:border-app-dark-border dark:bg-app-dark-card md:flex">
         {/* Brand Logo */}
-        <Link to="/" className="group mb-8 flex items-center gap-3 rounded-2xl p-1 transition">
+        <Link to="/" className="group mb-8 flex shrink-0 items-center gap-3 rounded-2xl p-1 transition">
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#903945,#E8AA8D)] text-xl font-black text-white shadow-active transition duration-300 group-hover:scale-105">
             N
           </span>
@@ -69,7 +69,7 @@ export default function Layout({ children, wide = false }) {
         </Link>
 
         {/* Primary Nav Navigation */}
-        <nav className="flex flex-1 flex-col gap-2">
+        <nav className="flex shrink-0 flex-col gap-2 pb-5">
           {navItems.map(({ path, label, icon: Icon }) => (
             <NavLink
               key={path}
@@ -129,16 +129,16 @@ export default function Layout({ children, wide = false }) {
           </NavLink>
         </nav>
 
-        <div className="relative mb-4 hidden overflow-hidden rounded-[22px] bg-app-deep p-5 text-white min-[900px]:block">
+        <div className="relative mb-4 block shrink-0 overflow-hidden rounded-[22px] bg-app-deep p-4 text-white min-[900px]:p-5">
           <div className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-app-primary" />
           <div className="absolute -bottom-12 left-8 h-24 w-24 rounded-full border-[18px] border-[#7A2638]" />
           <div className="absolute bottom-5 right-7 h-7 w-7 rounded-full bg-[#E8AA8D]" />
-          <p className="relative text-base font-black leading-5">Good People.<br />Brighter World.</p>
-          <p className="relative mt-3 text-[11px] font-semibold text-[#FBD0BD]">Connect. Create. Belong.</p>
+          <p className="relative text-sm font-black leading-5 min-[900px]:text-base">Good People.<br />Brighter World.</p>
+          <p className="relative mt-2 text-[11px] font-semibold text-[#FBD0BD] min-[900px]:mt-3">Connect. Create. Belong.</p>
         </div>
 
         {/* Sidebar Footer (Theme Toggle + User Profile Card) */}
-        <div className="space-y-3 pt-1">
+        <div className="mt-auto shrink-0 space-y-3 pt-1">
           <button
             onClick={toggleTheme}
             className="flex h-11 w-full items-center justify-between rounded-xl border border-app-border bg-white px-4 text-xs font-bold text-[#3A3437] transition hover:bg-[#F5E7E5] dark:border-app-dark-border dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-850"

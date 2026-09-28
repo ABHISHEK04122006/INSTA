@@ -33,33 +33,43 @@ const connectDB = async () => {
   const primaryUri = process.env.MONGODB_URI;
   const localUri = 'mongodb://127.0.0.1:27017/insta';
 
-  // Strategy 1: Attempt Primary Atlas URI with short timeout
+  const isProd = process.env.NODE_ENV === 'production';
+  const timeoutMs = isProd ? 15000 : 5000;
+
+  // Strategy 1: Attempt Primary Atlas URI
   if (primaryUri) {
     try {
-      console.log('Attempting MongoDB Atlas connection...');
+      console.log('Attempting MongoDB connection...');
       const conn = await mongoose.connect(primaryUri, {
-        serverSelectionTimeoutMS: 3000,
+        serverSelectionTimeoutMS: timeoutMs,
       });
       console.log(`MongoDB connected: ${conn.connection.host}`);
       await reconcilePostIndexes(conn.connection.db);
       return conn;
     } catch (primaryError) {
-      console.warn(`MongoDB Atlas connection skipped (${primaryError.message}). Falling back to local MongoDB...`);
+      console.error(`MongoDB connection failed: ${primaryError.message}`);
+      if (isProd) {
+        console.warn('Production Note: Ensure MongoDB Atlas Network Access has IP 0.0.0.0/0 whitelisted and your connection string is valid.');
+        return;
+      }
+      console.warn('Falling back to local MongoDB...');
     }
   }
 
-  // Strategy 2: Fallback to local MongoDB (127.0.0.1:27017)
-  try {
-    console.log('Connecting to local MongoDB (mongodb://127.0.0.1:27017/insta)...');
-    const conn = await mongoose.connect(localUri, {
-      serverSelectionTimeoutMS: 3000,
-    });
-    console.log(`Local MongoDB connected: ${conn.connection.host}`);
-    await reconcilePostIndexes(conn.connection.db);
-    return conn;
-  } catch (localError) {
-    console.error(`Local MongoDB connection failed: ${localError.message}`);
-    console.warn('Backend server running. Please ensure MongoDB is whitelisted or local MongoDB service is running.');
+  // Strategy 2: Fallback to local MongoDB (127.0.0.1:27017) in dev
+  if (!isProd) {
+    try {
+      console.log('Connecting to local MongoDB (mongodb://127.0.0.1:27017/insta)...');
+      const conn = await mongoose.connect(localUri, {
+        serverSelectionTimeoutMS: 3000,
+      });
+      console.log(`Local MongoDB connected: ${conn.connection.host}`);
+      await reconcilePostIndexes(conn.connection.db);
+      return conn;
+    } catch (localError) {
+      console.error(`Local MongoDB connection failed: ${localError.message}`);
+      console.warn('Backend server running without DB connection. Please start local MongoDB or fix Atlas URI.');
+    }
   }
 };
 

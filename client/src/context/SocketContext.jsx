@@ -20,7 +20,13 @@ export const SocketProvider = ({ children }) => {
     }
 
     const token = localStorage.getItem('token');
-    const newSocket = io('http://localhost:5000', {
+    const apiBase = import.meta.env.VITE_API_URL || '';
+    const socketUrl =
+      import.meta.env.VITE_SOCKET_URL ||
+      (apiBase ? apiBase.replace(/\/api\/?$/, '') : '') ||
+      (import.meta.env.PROD ? window.location.origin : 'http://localhost:5000');
+
+    const newSocket = io(socketUrl, {
       auth: { token },
     });
 
